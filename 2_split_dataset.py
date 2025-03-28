@@ -9,7 +9,7 @@ for each class folder, take train, val, test ratio of images
 """
 
 
-source_path = r"dataset"
+source_path = r"dataset_balanced_augmented"
 dest = r"dataset_split"
 os.makedirs(dest, exist_ok=True)
 dest_train_folder = os.path.join(dest, 'train')

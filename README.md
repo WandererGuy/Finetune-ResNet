@@ -18,17 +18,19 @@ this time , i handle color classfication , but u can do with all kind of classif
 create folder ./dataset with each subfolder is a folder have class name which have images  
 # split dataset
 ```
-python 1_split_dataset.py
+python 0_balance.py
+python 1_augment.py
+python 2_split_dataset.py
 ```
 
 # training, fix num_classes inn config.yaml
 ```
-python 2_train.py
+python 3_train.py
 ```
 
 # for evaluation or inference
 ```
-python 3_evaluation.py
+python 4_evaluation.py
 ```
 
 # for color server 
