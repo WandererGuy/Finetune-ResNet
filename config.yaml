@@ -1,0 +1,8 @@
+MODEL_SAVE_FOLDER : model_state_dict
+num_classes : 11
+
+TRAIN_FOLDER : ./dataset_split/train
+VAL_FOLDER : ./dataset_split/val
+
+IMAGE_INFER_PATH : D:/Downloads/down.jpg
+MODEL_INFER_PATH : model_state_dict/10_10.pth

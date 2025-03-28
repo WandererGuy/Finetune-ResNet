@@ -3,7 +3,12 @@ import torchvision.models as models
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import transforms
 from torch.utils.data import DataLoader
-
+import yaml
+import os 
+with open('config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+MODEL_SAVE_FOLDER = config['MODEL_SAVE_FOLDER']
+os.makedirs(MODEL_SAVE_FOLDER, exist_ok=True)
 def train(model, train_loader, val_loader, criterion, optimizer, num_epochs):
     # Train the model for the specified number of epochs
     for epoch in range(num_epochs):
@@ -70,6 +75,8 @@ def train(model, train_loader, val_loader, criterion, optimizer, num_epochs):
         # Print the epoch results
         print('Epoch [{}/{}], train loss: {:.4f}, train acc: {:.4f}, val loss: {:.4f}, val acc: {:.4f}'
               .format(epoch+1, num_epochs, train_loss, train_acc, val_loss, val_acc))
+        # Save only the model's state_dict
+        torch.save(model.state_dict(), os.path.join(MODEL_SAVE_FOLDER, f"{epoch+1}_{num_epochs}.pth"))
 
 
 # Load the pre-trained ResNet-18 model
@@ -78,9 +85,12 @@ model = models.resnet18(pretrained=True)
 for param in model.parameters():
     param.requires_grad = False
     # Modify the last layer of the model
-num_classes = 13 # replace with the number of classes in your dataset
-TRAIN_FOLDER = r'D:\color_classify\dataset_split\train'
-VAL_FOLDER = r'D:\color_classify\dataset_split\val'
+# Load the config.yaml file
+
+
+num_classes = config['num_classes']
+TRAIN_FOLDER = config['TRAIN_FOLDER']
+VAL_FOLDER = config['VAL_FOLDER']
 model.fc = torch.nn.Linear(model.fc.in_features, num_classes)
 
 # Define the transformations to apply to the images
@@ -94,7 +104,15 @@ transform = transforms.Compose([
 # Load the train and validation datasets
 train_dataset = ImageFolder(TRAIN_FOLDER, transform=transform)
 val_dataset = ImageFolder(VAL_FOLDER, transform=transform)
-
+# Access class index to class name mapping
+class_idx_map = train_dataset.class_to_idx
+t = {}
+for class_name, class_idx in class_idx_map.items():
+    t[class_idx] = class_name
+# To print the mapping
+print(t)
+with open("class.yaml", 'w') as file:
+    yaml.dump(t, file)
 # Define the loss function and optimizer
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.fc.parameters(), lr=0.001, momentum=0.9)
@@ -104,6 +122,7 @@ train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 print (device)
 model.to(device)
 # Fine-tune the last layer for a few epochs

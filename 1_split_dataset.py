@@ -9,8 +9,8 @@ for each class folder, take train, val, test ratio of images
 """
 
 
-source_path = r"D:\color_classify\dataset"
-dest = r"D:\color_classify\dataset_split"
+source_path = r"dataset"
+dest = r"dataset_split"
 os.makedirs(dest, exist_ok=True)
 dest_train_folder = os.path.join(dest, 'train')
 dest_val_folder = os.path.join(dest, 'val')
