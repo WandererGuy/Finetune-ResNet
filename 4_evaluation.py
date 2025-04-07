@@ -5,6 +5,8 @@ from torchvision import transforms
 import numpy as np
 import torchvision.models as models
 import yaml 
+import torch.nn.functional as F
+
 with open('class.yaml', 'r') as file:
     class_config = yaml.safe_load(file)
 
@@ -21,7 +23,14 @@ def infer(image_path, model, device):
         outputs = model(img_tensor)
         
     # Get the predicted class
-    _, predicted_class = torch.max(outputs, 1)
+    # Apply softmax to the output logits to get probabilities
+    probs = F.softmax(outputs, dim=1)
+    print ("-------- outputs logits --------")
+    print (outputs)
+    print ("-------- probs --------")
+    print (probs)
+    # Get the predicted class (highest probability)
+    confidence, predicted_class = torch.max(probs, 1)
     
     # Convert the predicted class index back to class label if necessary
     class_idx = predicted_class.item()

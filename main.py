@@ -8,7 +8,7 @@ import yaml
 with open('class.yaml', 'r') as file:
     class_config = yaml.safe_load(file)
 
-
+from torch.nn import functional as F
 # Define the same transformations used during training
 transform = transforms.Compose([
     transforms.Resize(256),
@@ -17,6 +17,37 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
+
+
+def add_prob_file(image_path,real_prob):
+    
+    with open('probs.txt', 'a') as file:
+        file.write(image_path)
+        file.write('\t')
+        file.write(str(real_prob))
+        file.write('\n')
+
+import shutil
+import uuid 
+def add_pseudo_dataset(image_path, classified_class):
+    pseudo_folder = "pseudo_dataset"
+    if not os.path.exists(pseudo_folder):
+        os.makedirs(pseudo_folder)
+    save_path = os.path.join(pseudo_folder, classified_class, str(uuid.uuid4()) + ".jpg")
+    os.makedirs(os.path.join(pseudo_folder, classified_class), exist_ok=True)
+    shutil.copy(image_path, save_path)
+
+def get_highest_prob(probs_tensor):
+    # Get the index of the highest value
+    max_index = torch.argmax(probs_tensor)
+
+    # Get the highest probability
+    max_prob = probs_tensor[0, max_index].item()  # Using `.item()` to convert the tensor value to a native Python type
+
+    # Print the result
+    print("Highest Probability:", max_prob)
+    print("Index of Highest Probability:", max_index.item())
+    return max_prob
 # Define a function to perform inference on an input image
 def infer(image_path, model, device):
     # Load the image
@@ -28,20 +59,34 @@ def infer(image_path, model, device):
     # Forward pass to get predictions
     with torch.no_grad():  # No need to track gradients during inference
         outputs = model(img_tensor)
-        
-    # Get the predicted class
-    _, predicted_class = torch.max(outputs, 1)
-    
+    # The output has unnormalized scores. To get probabilities, you can run a softmax on it.
+    probs = F.softmax(outputs, dim=1)
+    # print ("-------- outputs logits --------")
+    # print (outputs)
+    # print ("-------- probs --------")
+    # print (probs)
+    # Get the predicted class (highest probability)
+    _, predicted_class = torch.max(probs, 1)
+    real_prob =  get_highest_prob(probs)
+
+
+
+
+
     # Convert the predicted class index back to class label if necessary
     class_idx = predicted_class.item()
     print(f"Predicted class index: {class_idx}")
-    print (f"Predicted class name: {class_config[int(class_idx)]}")
-    # If you have class names, you can map it to the corresponding label like this:
-    # class_names = train_dataset.classes  # The class names from your ImageFolder dataset
-    # predicted_label = class_names[class_idx]
-    # print(f"Predicted class label: {predicted_label}")
+    class_name = class_config[int(class_idx)]
+    print (f"Predicted class name: {class_name}")
 
-    return class_config[int(class_idx)]  # Return the predicted class index
+    # add_prob_file(image_path,real_prob)
+    # average_prob = 0.965928918293414
+    # average_prob =  0.96
+    # if real_prob >= average_prob:
+    #     add_pseudo_dataset(image_path, class_name)
+
+
+    return class_name  # Return the predicted class index
 
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)

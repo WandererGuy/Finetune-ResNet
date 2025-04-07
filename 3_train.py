@@ -8,6 +8,9 @@ import os
 with open('config.yaml', 'r') as file:
     config = yaml.safe_load(file)
 MODEL_SAVE_FOLDER = config['MODEL_SAVE_FOLDER']
+if os.path.exists(MODEL_SAVE_FOLDER):
+    import shutil 
+    shutil.rmtree(MODEL_SAVE_FOLDER)
 os.makedirs(MODEL_SAVE_FOLDER, exist_ok=True)
 def train(model, train_loader, val_loader, criterion, optimizer, num_epochs):
     # Train the model for the specified number of epochs
